@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connect 4 Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 24px;
+        }
+        .cell-0 {
+            background-color: yellow;
+        }
+        .cell-1 {
+            background-color: red;
+        }
+        .cell-2 {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect 4 Game</h1>
+    <div>
+        <label for="rows">Rows:</label>
+        <input type="number" id="rows" placeholder="Enter number of rows">
+        <label for="cols">Columns:</label>
+        <input type="number" id="cols" placeholder="Enter number of columns">
+        <button id="new-game">New Game</button>
+    </div>
+    <div id="board"></div>
+
+    <script>
+        let gameID;
+        function drawBoard(board) {
+            let boardHtml = '<table border="1">';
+            for (let r = 0; r < board.length; r++) {
+                boardHtml += '<tr>';
+                for (let c = 0; c < board[r].length; c++) {
+                    boardHtml += `<td class="cell-${board[r][c]}" data-col="${c}"></td>`;
+                }
+                boardHtml += '</tr>';
+            }
+            boardHtml += '</table>';
+            $('#board').html(boardHtml);
+        }
+
+        function newGame(rows, cols) {
+            $.ajax({
+                url: '/new_game',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ rows: rows, cols: cols }),
+                success: function (data) {
+                    drawBoard(data.board);
+                    gameID = data.game_id;
+                },
+                error: function (error) {
+                    console.error("Error creating new game:", error);
+                    alert("Failed to create a new game. Please try again.");
+                }
+            });
+        }
+
+        $('#new-game').click(function () {
+            const rows = parseInt($('#rows').val(), 10);
+            const cols = parseInt($('#cols').val(), 10);
+            if (rows && cols) {
+                newGame(rows, cols);
+            } else {
+                alert("Please enter valid numbers for rows and columns.");
+            }
+        });
+
+        $('#board').on('click', 'td', function () {
+            const col = $(this).data('col');
+            $.ajax({
+                url: '/play',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ game_id: gameID, col: col }),
+                success: function (data) {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        drawBoard(data.board);
+                        if (data.winner !== 2) {
+                            alert(`Game Over! Winner: Player ${data.winner}`);
+                        }
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            // Optionally start a default game
+            // newGame(6, 5);
+        });
+    </script>
+</body>
+</html>
