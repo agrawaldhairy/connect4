@@ -163,7 +163,13 @@ def play():
     if board_state.check_win() != 2 or root_node.check_draw():
         print(board.get_board())
         return (
-            jsonify({"board": board.get_board().tolist(), "turn": str(game["turn"]), "winner": str(board_state.check_win())}),
+            jsonify(
+                {
+                    "board": board.get_board().tolist(),
+                    "turn": str(game["turn"]),
+                    "winner": str(board_state.check_win()),
+                }
+            ),
             200,
         )
 
@@ -176,7 +182,13 @@ def play():
     game["state"] = board
 
     return (
-        jsonify({"board": board.get_board().tolist(), "turn": game["turn"], "winner": board.check_win()}),
+        jsonify(
+            {
+                "board": board.get_board().tolist(),
+                "turn": game["turn"],
+                "winner": board.check_win(),
+            }
+        ),
         200,
     )
 

@@ -1,9 +1,9 @@
 import random
 import math
+import copy
+
 import numpy as np
 
-from Board import Board
-import copy
 
 CC = 2
 
@@ -26,7 +26,7 @@ class MCTSTreeNode:
         the list of child nodes of this node
     turn : int
         the turn of the player at this node
-    Poss_Child : List of Board
+    poss_child : List of Board
         the array of possible child nodes of this node
     level : int
         the level of the player at this node (0 for player 1, 1 for player 2)
@@ -70,7 +70,7 @@ class MCTSTreeNode:
         self.parent = parent
         self.children = []
         self.turn = turn
-        self.Poss_Child = self.get_neighbour_moves(level)
+        self.poss_child = self.get_neighbour_moves(level)
         self.level = level
         self.is_terminal = self.check_is_terminal()
 
@@ -78,7 +78,8 @@ class MCTSTreeNode:
         """
         Check if the current state of the game is a terminal state.
 
-        A terminal state is defined as a state where the game has ended, either in a win, loss, or draw condition.
+        A terminal state is defined as a state where the game has ended, either in
+        a win, loss, or draw condition.
 
         Parameters:
         self (MCTSTreeNode): The current node in the Monte Carlo Tree Search (MCTS) tree.
@@ -87,7 +88,8 @@ class MCTSTreeNode:
         bool: True if the game is in a terminal state, False otherwise.
 
         The function checks if the game is in a terminal state by calling the `check_win()`
-        of the current node. If the result is 2 (indicating a draw), it further checks if the game is a draw by calling
+        of the current node. If the result is 2 (indicating a draw),
+        it further checks if the game is a draw by calling
         the `check_draw()` method. If either of these conditions is met, the function returns True;
         otherwise, it returns False.
         """
@@ -105,12 +107,11 @@ class MCTSTreeNode:
         """
         if self.state.check_win() == 0 or self.state.check_win() == 1:
             return False
-        else:
-            result = 0
-            board = self.state.get_board()
-            for c in range(self.state.shapes[1]):
-                result |= board[0, c]
-            return not (result & 2)
+        result = 0
+        board = self.state.get_board()
+        for c in range(self.state.shapes[1]):
+            result |= board[0, c]
+        return not result & 2
 
     def get_neighbour_moves(self, level):
         """
@@ -147,17 +148,17 @@ class MCTSTreeNode:
         for i in range(n):
             if self.children[i].visits == 0:
                 return self.children[i]
-            else:
-                score = self.children[i].score / self.children[i].visits
-                score += math.sqrt(CC * math.log(self.visits) / self.children[i].visits)
-                if score > best_score:
-                    best_score = score
-                    best_child = self.children[i]
+            score = self.children[i].score / self.children[i].visits
+            score += math.sqrt(CC * math.log(self.visits) / self.children[i].visits)
+            if score > best_score:
+                best_score = score
+                best_child = self.children[i]
         return best_child
 
     def expansion(self):
         """
-        Expands the game tree by selecting a random successor state from the parent node's possible child states.
+        Expands the game tree by selecting a random successor state from the parent node's
+        possible child states.
 
         Returns:
         MCTSTreeNode: The newly created child node representing the selected successor state.
@@ -166,9 +167,9 @@ class MCTSTreeNode:
         This function also updates the parent node's list of possible child states by removing
         the selected successor state.
         """
-        next_node = random.choice(self.Poss_Child)
-        self.Poss_Child = np.delete(
-            self.Poss_Child, np.where(self.Poss_Child == next_node), axis=0
+        next_node = random.choice(self.poss_child)
+        self.poss_child = np.delete(
+            self.poss_child, np.where(self.poss_child == next_node), axis=0
         )
         child = MCTSTreeNode(next_node, self, 1 ^ self.turn, self.level ^ 1)
         self.children.append(child)
@@ -196,9 +197,9 @@ class MCTSTreeNode:
                 return board.check_win()
             self.state = random.choice(moves)
             if (
-                    (board.check_win() == 2 and self.check_draw())
-                    or board.check_win() == 1
-                    or board.check_win() == 0
+                (board.check_win() == 2 and self.check_draw())
+                or board.check_win() == 1
+                or board.check_win() == 0
             ):
                 break
             level = level ^ 1
@@ -207,10 +208,12 @@ class MCTSTreeNode:
 
     def update(self, result):
         """
-        Update the scores and visits of the parent node and its ancestors based on the simulation result.
+        Update the scores and visits of the parent node and its ancestors based on the
+        simulation result.
 
         Parameters:
-        result (int): The result of the simulation (1 for player 1 win, 0 for player 2 win, 2 for draw).
+        result (int): The result of the simulation (1 for player 1 win,
+        0 for player 2 win, 2 for draw).
 
         Returns:
         None

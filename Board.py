@@ -1,5 +1,4 @@
 import numpy as np
-from typing import overload
 
 
 class Board:
@@ -36,6 +35,19 @@ class Board:
         self.board = np.full((rows, cols), 2, dtype=int)
 
     def set_whole_board(self, board):
+        """
+        Set the entire board with a given 2D NumPy array.
+
+        This method updates the current board with the provided 2D NumPy array.
+        It also updates the number of rows and columns based on the shape of the array.
+
+        Parameters:
+        board (np.ndarray): A 2D NumPy array representing the new board state.
+            The array should have shape (rows, cols), where rows and cols are the number of rows and columns in the board.
+
+        Returns:
+        None
+        """
         self.board = board
         self.rows = board.shape[0]
         self.cols = board.shape[1]
@@ -169,7 +181,8 @@ class Board:
                 dc (int): The column increment for the direction.
 
             Returns:
-                int: The player number of the player who has four consecutive cells in the given direction
+                int: The player number of the player who has four consecutive cells in
+                     the given direction
                      (1 for player 1, 0 for player 2, None for no winner).
             """
             player = self.board[row, col]
