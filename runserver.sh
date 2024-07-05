@@ -36,7 +36,7 @@ echo "Flask app is running successfully."
 
 # Navigate to the directory containing the React app
 # shellcheck disable=SC2164
-cd connect4-ui
+cd connect-four-ui
 
 # Start the React app
 npm start &
