@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: streamlit-auth0
+Version: 1.0.5
+Home-page: 
+Author: 
+Author-email: 
+Requires-Python: >=3.6
+License-File: LICENSE
+Requires-Dist: streamlit (>=0.63)
+Requires-Dist: PyJWT (>=2.3.0)
+Requires-Dist: auth0-python (>=4.0)
+
