@@ -2,6 +2,7 @@ import json
 
 from flask import Flask, render_template, request, session, jsonify
 from flask_session import Session
+from flask_cors import CORS
 import random
 import string
 import time
@@ -12,11 +13,16 @@ from Connect4Game import mcts_n
 import glog as logger
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = True
+app.config['SESSION_USE_SIGNER'] = True
+app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
+app.config["SESSION_COOKIE_SECURE"] = True
 
-# Secret key for session management
-app.secret_key = "your_secret_key"
-app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+CORS(app, supports_credentials=True)
 
 # Rate limiting
 RATE_LIMIT = 100  # requests per minute
@@ -112,22 +118,41 @@ def new_game():
     cols = data["cols"]
     game_id, new_board = initialize_new_game(rows, cols)
 
-    return jsonify({"game_id": game_id, "board": new_board.get_board().tolist()}), 200
+    response = jsonify({"game_id": game_id, "board": new_board.get_board().tolist()})
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 
-@app.route("/play", methods=["POST"])
-def play():
+@app.route("/play/<string:game_id>", methods=["POST"])
+def play(game_id):
+    """
+    Handles a player's move and makes an AI move if necessary.
+
+    Parameters:
+    request (flask.Request): The incoming request object containing the game ID and the column where the player wants to place their disc.
+
+    Returns:
+    flask.Response: A JSON response containing the updated game board, the current turn, and the winner if the game is over.
+    """
     data = request.get_json()
-    GAME_ID = data.get("game_id")
+    GAME_ID = game_id
     game_id = session.get("game_id")
+
+    # Check if the game ID in the request matches the game ID in the session
     if game_id != GAME_ID:
         return jsonify({"error": "Invalid game ID."}), 400
-    ROWS = session["rows"]
-    COLS = session["cols"]
+
+    ROWS = session.get("rows")
+    COLS = session.get("cols")
+
+    # Check if a game is active
     if not game_id or game_id not in games:
         return jsonify({"error": "No active game found."}), 400
+
     col = data.get("col")
 
+    # Check if the selected column is valid
     if col is None or col < 0 or col >= COLS:
         return jsonify({"error": "Invalid column."}), 400
 
@@ -136,7 +161,7 @@ def play():
     board = board_state.get_board()
     turn = game["turn"]
 
-    # Add rate limiting
+    # Add rate limiting to prevent abuse
     user_ip = request.remote_addr
     if user_ip not in rate_limits:
         rate_limits[user_ip] = [time.time()]
@@ -181,16 +206,17 @@ def play():
     game["turn"] ^= 1
     game["state"] = board
 
-    return (
-        jsonify(
+    response = jsonify(
             {
                 "board": board.get_board().tolist(),
-                "turn": game["turn"],
-                "winner": board.check_win(),
+                "turn": str(game["turn"]),
+                "winner": str(board.check_win()),
             }
-        ),
-        200,
-    )
+        )
+    print(response)
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 
 if __name__ == "__main__":

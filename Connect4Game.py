@@ -63,7 +63,7 @@ def mcts_n(parent_node, n):
     """
     initial_node = copy.deepcopy(parent_node)
     while n > 0 and parent_node.state.check_win() == 2 and not parent_node.check_draw():
-        if len(parent_node.Poss_Child) and random.uniform(0, 1) >= 0:
+        if len(parent_node.poss_child) and random.uniform(0, 1) >= 0:
             parent_node = parent_node.expansion()
             result = parent_node.simulation(parent_node.level)
             parent_node.update(result)
